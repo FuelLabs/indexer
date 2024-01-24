@@ -1,0 +1,40 @@
+[workspace]
+# Use the new resolver to prevent dev-deps and build-deps from enabling debugging or test features in production.
+resolver = "2"
+members = ["packages/fuels-indexer"]
+
+default-members = [
+   "packages/fuels-indexer",
+]
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+panic = "abort"
+
+[workspace.package]
+authors = ["Fuel Labs <contact@fuel.sh>"]
+edition = "2021"
+homepage = "https://fuel.network/"
+license = "Apache-2.0"
+repository = "https://github.com/FuelLabs/fuels-indexer"
+rust-version = "1.75.0"
+version = "0.1.0"
+
+[workspace.dependencies]
+async-graphql-parser = "5.0"
+async-graphql-value = "5.0"
+bincode = "1.3"
+clap = "3.1"
+fuel-crypto = { version = "0.43.1", default-features = false }
+fuel-tx = { version = "0.43.1" }
+fuel-types = { version = "0.43.1", default-features = false, features = ["serde"] }
+fuel-vm = { version = "0.43.1" }
+fuels = { version = "0.54", default-features = false }
+fuels-code-gen = { version = "0.54", default-features = false }
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0", default-features = false }
+thiserror = "1.0"
+tokio = "1.28"
+tokio-util = "0.7"
+tracing = "0.1"

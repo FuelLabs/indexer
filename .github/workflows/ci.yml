@@ -1,0 +1,193 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+  pull_request: null
+  release:
+    types:
+      - published
+env:
+  DATABASE_URL: postgres://postgres:my-secret@localhost:5432
+  DASEL_VERSION: https://github.com/TomWright/dasel/releases/download/v1.24.3/dasel_linux_amd64
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+  REGISTRY: ghcr.io
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 2
+  SQLX_OFFLINE: true
+  RUSTC_VERSION: 1.75.0
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+  IS_MASTER: ${{ github.head_ref == 'master' || github.ref_name == 'master' }}
+  IS_DEVELOP: ${{ github.head_ref == 'develop' || github.ref_name == 'develop' }}
+  IS_RELEASE: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+jobs:
+  cancel-previous-runs:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+  set-env-vars:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    outputs:
+      IS_MASTER: ${{ steps.set-env.outputs.IS_MASTER }}
+      IS_DEVELOP: ${{ steps.set-env.outputs.IS_DEVELOP }}
+      IS_RELEASE: ${{ steps.set-env.outputs.IS_RELEASE }}
+      IS_RELEASE_OR_MASTER_OR_DEVELOP_OR_SEMVER: ${{ steps.set-env.outputs.IS_RELEASE_OR_MASTER_OR_DEVELOP_OR_SEMVER }}
+    steps:
+      - name: Set env vars
+        id: set-env
+        run: >
+          echo "IS_MASTER=${{ env.IS_MASTER }}" >> $GITHUB_OUTPUT
+
+          echo "IS_DEVELOP=${{ env.IS_DEVELOP }}" >> $GITHUB_OUTPUT
+
+          echo "IS_RELEASE=${{ env.IS_RELEASE }}" >> $GITHUB_OUTPUT
+
+          if [[ ${{ env.IS_MASTER }} == 'true' || ${{ env.IS_DEVELOP }} == 'true' || ${{ env.IS_RELEASE }} == 'true' || ${{ env.BRANCH_NAME }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "IS_RELEASE_OR_MASTER_OR_DEVELOP_OR_SEMVER=true" >> $GITHUB_OUTPUT
+          else
+            echo "IS_RELEASE_OR_MASTER_OR_DEVELOP_OR_SEMVER=false" >> $GITHUB_OUTPUT
+          fi
+  cargo-toml-fmt-check:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    needs:
+      - set-env-vars
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUSTC_VERSION }}
+      - name: setup binstall
+        uses: taiki-e/install-action@cargo-binstall
+      - name: Install Cargo.toml linter
+        run: cargo binstall --no-confirm cargo-sort
+      - name: Run Cargo.toml sort check
+        run: cargo sort -w --check
+  cargo-fmt-check:
+    if: needs.set-env-vars.outputs.IS_RELEASE != 'true'
+    needs:
+      - set-env-vars
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUSTC_VERSION }}
+          components: rustfmt
+      - name: cargo fmt --all --verbose -- --check
+        run: cargo fmt --all --verbose -- --check
+  cargo-clippy-no-default-features:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    needs:
+     - set-env-vars
+     - cargo-toml-fmt-check
+     - cargo-fmt-check
+    if: needs.set-env-vars.outputs.IS_RELEASE_OR_MASTER_OR_DEVELOP_OR_SEMVER !=
+      'true'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUSTC_VERSION }}
+          components: clippy, rustfmt
+      - name: cargo clippy --locked --no-default-features
+        run: cargo clippy --locked --no-default-features
+  cargo-clippy-all-features-all-targets:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    needs:
+     - set-env-vars
+     - cargo-toml-fmt-check
+     - cargo-fmt-check
+    if: needs.set-env-vars.outputs.IS_RELEASE_OR_MASTER_OR_DEVELOP_OR_SEMVER !=
+      'true'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUSTC_VERSION }}
+          components: clippy, rustfmt
+      - name: cargo clippy --locked --all-targets --all-features
+        run: cargo clippy --locked --all-targets --all-features
+      - name: Notify if Job Fails
+        uses: ravsamhq/notify-slack-action@v2
+        if: always() && (github.ref == 'refs/heads/master' || github.ref_type == 'tag')
+        with:
+          status: ${{ job.status }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          notification_title: "{workflow} has {status_message}"
+          message_format: "{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}> :
+            <{run_url}|View Run Results>"
+          footer: ""
+          notify_when: failure
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_NOTIFY_BUILD }}
+  publish:
+    needs:
+      - set-env-vars
+    if: needs.set-env-vars.outputs.IS_RELEASE == 'true'
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUSTC_VERSION }}
+          targets: wasm32-unknown-unknown
+      - name: Verify tag version
+        run: >
+          curl -sSLf "${DASEL_VERSION}" -L -o dasel && chmod +x dasel
+
+          mv ./dasel /usr/local/bin/dasel
+
+          ./.github/workflows/scripts/verify_tag.sh ${{ github.ref_name }} Cargo.toml
+      - name: Publish crates
+        uses: katyo/publish-crates@v2
+        with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Notify Slack On Failure
+        uses: ravsamhq/notify-slack-action@v2
+        if: always()
+        with:
+          status: ${{ job.status }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          notification_title: "{workflow} has {status_message}"
+          message_format: "{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}> :
+            <{run_url}|View Run Results>"
+          footer: ""
+          notify_when: failure
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_NOTIFY_BUILD }}
+  validation-complete:
+    if: always()
+    needs:
+      - publish
+      - cargo-clippy-no-default-features
+      - cargo-clippy-all-features-all-targets
+      - cargo-fmt-check
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    steps:
+      - run: true
+  notify-slack-on-failure:
+    needs:
+      - validation-complete
+    if: always()
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    steps:
+      - name: Notify Slack On Failure
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: ${{ job.status }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          notification_title: "{workflow} has {status_message}"
+          message_format: "{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}> :
+            <{run_url}|View Run Results>"
+          footer: ""
+          notify_when: failure
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_NOTIFY_BUILD }}
