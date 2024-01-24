@@ -4,7 +4,7 @@ resolver = "2"
 members = ["packages/fuels-indexer"]
 
 default-members = [
-   "packages/fuels-indexer"
+   "packages/fuels-indexer",
 ]
 
 [profile.release]

@@ -9,7 +9,6 @@ repository = { workspace = true }
 rust-version = { workspace = true }
 description = "Fuels Indexer"
 
-
 [dependencies]
 anyhow = { version = "1.0", default-features = false }
 async-std = "1"
