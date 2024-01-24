@@ -1,0 +1,26 @@
+[package]
+name = "fuels-indexer"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+rust-version = { workspace = true }
+description = "Fuels Indexer"
+
+
+[dependencies]
+anyhow = { version = "1.0", default-features = false }
+async-std = "1"
+bincode = { workspace = true }
+clap = { features = ["cargo", "derive", "env"], workspace = true }
+fuel-crypto = { workspace = true }
+fuel-tx = { workspace = true }
+fuel-vm = { workspace = true }
+thiserror = { workspace = true }
+tokio = { features = ["macros", "rt-multi-thread", "sync", "process"], workspace = true }
+
+[dev-dependencies]
+
+[features]
