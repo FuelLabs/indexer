@@ -1,10 +1,11 @@
 [workspace]
 # Use the new resolver to prevent dev-deps and build-deps from enabling debugging or test features in production.
 resolver = "2"
-members = ["packages/fuels-indexer"]
+members = ["packages/fuels-indexer", "packages/forc-index"]
 
 default-members = [
    "packages/fuels-indexer",
+   "packages/forc-index",
 ]
 
 [profile.release]

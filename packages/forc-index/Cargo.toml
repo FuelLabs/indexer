@@ -1,0 +1,40 @@
+[package]
+name = "forc-index"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+rust-version = { workspace = true }
+description = "Fuels Indexer Forc plugin"
+
+[dependencies]
+actix-web = { version = "4", default-features = false, features = ["macros"] }
+anyhow = "1"
+clap = { features = ["derive", "env"], workspace = true }
+colorful = "0.2.2"
+filetime = "0.2"
+fuel-tx = { features = ["builder"], workspace = true }
+fuels = { default-features = false, workspace = true }
+hex = "0.4.3"
+humantime = "2.1.0"
+indicatif = "0.17"
+owo-colors = "1.3.0"
+rand = "0.8"
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = "0.8"
+tempfile = "3.4.0"
+tokio = { features = ["macros", "rt-multi-thread", "process"], workspace = true }
+toml = "0.5"
+tracing = { workspace = true }
+walkdir = "2"
+whoami = "1.4"
+
+[[bin]]
+name = "forc-index"
+path = "src/bin/forc-index.rs"
+
+[lib]
+path = "src/lib.rs"
