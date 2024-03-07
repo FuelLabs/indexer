@@ -31,8 +31,7 @@ pub mod types {
         pub transaction_status: Option<TransactionStatus>,
     }
 
-    // TODO: Implement a "full block" type that each data source's block
-    // type will implement a conversion to.
+    /// Contains all of the necessary information for an executor to process a block.
     #[derive(Debug)]
     pub struct ExecutableBlock {
         pub id: BlockId,

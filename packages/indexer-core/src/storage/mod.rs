@@ -1,7 +1,9 @@
 use futures::Future;
 
-pub trait StoragePort {
-    fn save() -> impl Future<Output = anyhow::Result<()>>;
+use crate::IndexableType;
+
+pub trait Storage {
+    fn save(indexable_data: IndexableType) -> impl Future<Output = anyhow::Result<()>>;
     fn find() -> impl Future<Output = anyhow::Result<()>>;
     fn find_many() -> impl Future<Output = anyhow::Result<()>>;
 }

@@ -1,4 +1,7 @@
+use fuel_core_types::blockchain::primitives::BlockId;
+use fuel_tx::Bytes32;
 use futures::stream::Stream;
+use tai64::Tai64;
 
 pub mod data_source;
 pub mod executor;
@@ -27,3 +30,46 @@ pub trait IntoBoxStream: Stream {
 }
 
 impl<S> IntoBoxStream for S where S: Stream + Send + Sync + 'static {}
+
+#[derive(Debug)]
+pub struct Transaction {
+    pub id: fuel_tx::TxId,
+    pub receipts: Vec<fuel_tx::Receipt>,
+    pub kind: fuel_tx::Transaction,
+}
+
+#[derive(Debug)]
+pub struct Block {
+    pub id: BlockId,
+    pub height: u32,
+    pub da_height: u64,
+    pub msg_receipt_count: u64,
+    pub tx_root: Bytes32,
+    pub msg_receipt_root: Bytes32,
+    pub prev_id: BlockId,
+    pub prev_root: Bytes32,
+    pub timestamp: Tai64,
+    pub application_hash: Bytes32,
+    pub transactions: Vec<Transaction>,
+}
+
+/// Represents the different types of data that can be indexed from the chain.
+///
+/// It is intended that instances of this type will be persisted into storage
+/// through the `save()` method of the Storage trait. Thus, any implementation of
+/// the trait should cover all variants of this type.
+#[derive(Debug)]
+pub enum IndexableType {
+    Block(Block),
+    Transaction(Transaction),
+    Input(fuel_tx::Input),
+    Output(fuel_tx::Output),
+    StorageSlot(fuel_tx::StorageSlot),
+    UtxoId(fuel_tx::UtxoId),
+    TxPointer(fuel_tx::TxPointer),
+    Policies(fuel_tx::policies::Policies),
+    PanicInstruction(fuel_tx::PanicInstruction),
+    Receipt(fuel_tx::Receipt),
+    // TODO: Figure out associated data and rename variant
+    ArbitrarySwayStruct,
+}
