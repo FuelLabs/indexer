@@ -1,5 +1,7 @@
 pub mod fuel_client;
 
+use tokio::sync::mpsc::UnboundedSender;
+
 use crate::BoxStream;
 
 pub mod types {
@@ -47,5 +49,6 @@ pub trait DataSource<T> {
     // TODO: Create an enum of chain data structures that can be indexed so methods can be genericized?
 
     /// Returns a `BoxStream<T>` starting at the desired chain height.
-    fn get_stream(&mut self, starting_block_height: u32) -> BoxStream<T>;
+    fn get_stream(&self) -> (UnboundedSender<T>, BoxStream<T>);
+    fn run(&mut self, tx: UnboundedSender<T>, start: u32) -> tokio::task::JoinHandle<()>;
 }
