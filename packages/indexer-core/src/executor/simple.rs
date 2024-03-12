@@ -1,7 +1,6 @@
 use crate::{
     data_source::types::ExecutableBlock, Block, IndexableType, IntoBoxStream, Transaction,
 };
-use fuel_tx::{Bytes32, Script};
 use futures::StreamExt;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
@@ -33,11 +32,10 @@ impl Executor for SimpleExecutor {
                         }
                     }
 
-                    // TODO: IndexableType::Transaction needs to include tx ID and kind
                     let idx_tx = Transaction {
-                        id: Bytes32::zeroed(),
+                        id: transaction.id,
                         receipts: transaction.receipts.clone().unwrap_or_default(),
-                        kind: fuel_tx::Transaction::Script(Script::default()),
+                        kind: transaction.kind.clone(),
                     };
 
                     indexed_item_tx
@@ -45,7 +43,6 @@ impl Executor for SimpleExecutor {
                         .unwrap()
                 }
 
-                // TODO: Does FullBlock have previous block ID?
                 let b = Block {
                     id: block.id,
                     height: block.header.height,
@@ -53,7 +50,7 @@ impl Executor for SimpleExecutor {
                     msg_receipt_count: block.header.message_receipt_count,
                     tx_root: block.header.transactions_root,
                     msg_receipt_root: block.header.message_receipt_root,
-                    prev_id: Bytes32::zeroed().into(),
+                    // prev_id: Bytes32::zeroed().into(),
                     prev_root: block.header.prev_root,
                     timestamp: block.header.time,
                     application_hash: block.header.application_hash,

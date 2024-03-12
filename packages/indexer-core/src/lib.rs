@@ -46,7 +46,7 @@ pub struct Block {
     pub msg_receipt_count: u64,
     pub tx_root: Bytes32,
     pub msg_receipt_root: Bytes32,
-    pub prev_id: BlockId,
+    // pub prev_id: BlockId,
     pub prev_root: Bytes32,
     pub timestamp: Tai64,
     pub application_hash: Bytes32,

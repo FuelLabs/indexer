@@ -1,6 +1,9 @@
 mod client;
 mod queries;
 
+use fuel_tx::UniqueIdentifier;
+use fuel_vm::fuel_types::{canonical::Deserialize, ChainId};
+
 use self::queries::FullBlock;
 use super::types::{ExecutableBlock, Header, Transaction};
 pub use crate::data_source::fuel_client::client::FuelClientDataSource;
@@ -40,19 +43,25 @@ impl From<FullBlock> for ExecutableBlock {
             fuel_core_client::client::schema::block::Consensus::Unknown => todo!(),
         };
 
-        let transactions = full_block.transactions.into_iter().map(|opaque_tx| {
-            Transaction {
-                // id,
-                raw_payload: opaque_tx.raw_payload.to_vec(),
-                receipts: opaque_tx.receipts.map(|r_vec| r_vec.into_iter().map(|r| fuel_tx::Receipt::try_from(r).unwrap()).collect::<Vec<fuel_tx::Receipt>>()),
-                transaction_status: opaque_tx.status.map(|s| match s {
-                    fuel_core_client::client::schema::tx::TransactionStatus::SubmittedStatus(s) => fuel_core_types::services::txpool::TransactionStatus::Submitted { time: s.time.0 },
-                    fuel_core_client::client::schema::tx::TransactionStatus::SuccessStatus(s) => fuel_core_types::services::txpool::TransactionStatus::Success { block_id: s.block.id.0.0.into(), time: s.time.0, result: s.program_state.map(|ps| ps.try_into().unwrap()) },
-                    fuel_core_client::client::schema::tx::TransactionStatus::SqueezedOutStatus(s) => fuel_core_types::services::txpool::TransactionStatus::SqueezedOut { reason: s.reason },
-                    fuel_core_client::client::schema::tx::TransactionStatus::FailureStatus(s) => fuel_core_types::services::txpool::TransactionStatus::Failed { block_id: s.block.id.0.0.into(), time: s.time.0, reason: s.reason, result: s.program_state.map(|ps| ps.try_into().unwrap()) },
-                    fuel_core_client::client::schema::tx::TransactionStatus::Unknown => todo!(),
-                }),
-        }}).collect::<Vec<Transaction>>();
+        let transactions = full_block
+            .transactions
+            .into_iter()
+            .map(|opaque_tx| {
+                let receipts = opaque_tx.receipts.map(|r_vec| {
+                    r_vec
+                        .into_iter()
+                        .map(|r| fuel_tx::Receipt::try_from(r).unwrap())
+                        .collect::<Vec<fuel_tx::Receipt>>()
+                });
+                let raw = opaque_tx.raw_payload.clone();
+                let tx = fuel_tx::Transaction::from_bytes(&raw.0 .0).unwrap();
+                Transaction {
+                    id: tx.id(&ChainId::default()),
+                    receipts,
+                    kind: tx,
+                }
+            })
+            .collect::<Vec<Transaction>>();
 
         Self {
             id,

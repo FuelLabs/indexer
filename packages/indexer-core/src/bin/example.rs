@@ -9,7 +9,7 @@ async fn main() -> anyhow::Result<()> {
     let mut data_source = FuelClientDataSource::new(1000);
     let (data_source_tx, executable_block_stream) = data_source.get_stream();
     print!("Initializing chain listener...");
-    let chain_listener_task = data_source.run(data_source_tx, 1);
+    let chain_listener_task = data_source.run(data_source_tx, 2000000);
     println!("done!");
 
     let echo_executor = SimpleExecutor {};

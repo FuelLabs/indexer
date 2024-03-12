@@ -5,10 +5,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use crate::BoxStream;
 
 pub mod types {
-    use fuel_core_types::{
-        blockchain::{consensus::Consensus, primitives::BlockId},
-        services::txpool::TransactionStatus,
-    };
+    use fuel_core_types::blockchain::{consensus::Consensus, primitives::BlockId};
     use fuel_tx::{Bytes32, Receipt};
     use tai64::Tai64;
 
@@ -28,11 +25,9 @@ pub mod types {
 
     #[derive(Debug)]
     pub struct Transaction {
-        // pub id: fuel_tx::TxId,
-        pub raw_payload: Vec<u8>,
+        pub id: fuel_tx::TxId,
         pub receipts: Option<Vec<Receipt>>,
-        pub transaction_status: Option<TransactionStatus>,
-        // pub kind: fuel_tx::Transaction,
+        pub kind: fuel_tx::Transaction,
     }
 
     /// Contains all of the necessary information for an executor to process a block.

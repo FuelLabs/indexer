@@ -1,6 +1,6 @@
-use std::sync::Arc;
 
-use tokio::sync::RwLock;
+
+
 use tokio_stream::StreamExt;
 
 use crate::{BoxStream, IndexableType};
@@ -38,14 +38,12 @@ impl Storage for SimpleStorage {
         })
     }
 
-    fn save(
+    async fn save(
         &mut self,
-        indexable_data: IndexableType,
-    ) -> impl futures::prelude::Future<Output = anyhow::Result<()>> {
-        async {
-            // self.items.push(indexable_data);
-            Ok(())
-        }
+        _indexable_data: IndexableType,
+    ) -> anyhow::Result<()> {
+        // self.items.push(indexable_data);
+        Ok(())
     }
 
     // fn find() -> impl futures::prelude::Future<Output = anyhow::Result<()>> {
