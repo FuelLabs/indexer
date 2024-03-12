@@ -28,9 +28,11 @@ pub mod types {
 
     #[derive(Debug)]
     pub struct Transaction {
+        // pub id: fuel_tx::TxId,
         pub raw_payload: Vec<u8>,
         pub receipts: Option<Vec<Receipt>>,
         pub transaction_status: Option<TransactionStatus>,
+        // pub kind: fuel_tx::Transaction,
     }
 
     /// Contains all of the necessary information for an executor to process a block.

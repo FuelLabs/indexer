@@ -31,14 +31,14 @@ pub trait IntoBoxStream: Stream {
 
 impl<S> IntoBoxStream for S where S: Stream + Send + Sync + 'static {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Transaction {
     pub id: fuel_tx::TxId,
     pub receipts: Vec<fuel_tx::Receipt>,
     pub kind: fuel_tx::Transaction,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Block {
     pub id: BlockId,
     pub height: u32,
@@ -58,7 +58,7 @@ pub struct Block {
 /// It is intended that instances of this type will be persisted into storage
 /// through the `save()` method of the Storage trait. Thus, any implementation of
 /// the trait should cover all variants of this type.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum IndexableType {
     Block(Block),
     Transaction(Transaction),

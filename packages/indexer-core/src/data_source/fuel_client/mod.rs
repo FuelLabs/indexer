@@ -42,6 +42,7 @@ impl From<FullBlock> for ExecutableBlock {
 
         let transactions = full_block.transactions.into_iter().map(|opaque_tx| {
             Transaction {
+                // id,
                 raw_payload: opaque_tx.raw_payload.to_vec(),
                 receipts: opaque_tx.receipts.map(|r_vec| r_vec.into_iter().map(|r| fuel_tx::Receipt::try_from(r).unwrap()).collect::<Vec<fuel_tx::Receipt>>()),
                 transaction_status: opaque_tx.status.map(|s| match s {

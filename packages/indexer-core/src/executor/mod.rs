@@ -1,4 +1,4 @@
-pub mod echo;
+pub mod simple;
 
 use tokio::sync::mpsc::UnboundedSender;
 
