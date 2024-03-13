@@ -16,9 +16,8 @@ async fn main() -> anyhow::Result<()> {
     let simple_storage = SimpleStorage { items: vec![] };
     println!("done!");
 
-    let echo_executor = SimpleExecutor {};
     print!("Initializing executor...");
-    let executor_task = echo_executor.run(executable_block_stream, simple_storage);
+    let executor_task = SimpleExecutor::run(executable_block_stream, simple_storage);
     println!("done!");
 
     let (_, _) = tokio::join!(chain_listener_task, executor_task);

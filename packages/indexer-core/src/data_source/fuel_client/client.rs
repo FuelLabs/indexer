@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
 use super::queries::ClientExt;
-use crate::data_source::types::ExecutableBlock;
 use crate::data_source::DataSource;
+use crate::executor::types::ExecutableBlock;
 use crate::{BoxStream, IntoBoxStream};
 
 use fuel_core_client::client::{

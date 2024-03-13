@@ -6,8 +6,8 @@ use fuel_tx::UniqueIdentifier;
 use fuel_vm::fuel_types::{canonical::Deserialize, ChainId};
 
 use self::queries::FullBlock;
-use super::types::{ExecutableBlock, Header, Transaction};
 pub use crate::data_source::fuel_client::client::FuelClientDataSource;
+use crate::executor::types::{ExecutableBlock, ExecutableTransaction, Header};
 
 impl TryFrom<FullBlock> for ExecutableBlock {
     type Error = Error;
@@ -58,13 +58,13 @@ impl TryFrom<FullBlock> for ExecutableBlock {
                 });
                 let raw = opaque_tx.raw_payload.clone();
                 let tx = fuel_tx::Transaction::from_bytes(&raw.0 .0).unwrap();
-                Transaction {
+                ExecutableTransaction {
                     id: tx.id(&ChainId::default()),
                     receipts,
                     kind: tx,
                 }
             })
-            .collect::<Vec<Transaction>>();
+            .collect::<Vec<ExecutableTransaction>>();
 
         Ok(Self {
             id,

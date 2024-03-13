@@ -32,14 +32,14 @@ pub trait IntoBoxStream: Stream {
 impl<S> IntoBoxStream for S where S: Stream + Send + Sync + 'static {}
 
 #[derive(Debug, Clone)]
-pub struct Transaction {
+pub struct IndexedTransaction {
     pub id: fuel_tx::TxId,
     pub receipts: Vec<fuel_tx::Receipt>,
     pub kind: fuel_tx::Transaction,
 }
 
 #[derive(Debug, Clone)]
-pub struct Block {
+pub struct IndexedBlock {
     pub id: BlockId,
     pub height: u32,
     pub da_height: u64,
@@ -50,7 +50,7 @@ pub struct Block {
     pub prev_root: Bytes32,
     pub timestamp: Tai64,
     pub application_hash: Bytes32,
-    pub transactions: Vec<Transaction>,
+    pub transactions: Vec<IndexedTransaction>,
 }
 
 /// Represents the different types of data that can be indexed from the chain.
@@ -60,8 +60,8 @@ pub struct Block {
 /// the trait should cover all variants of this type.
 #[derive(Debug, Clone)]
 pub enum IndexableType {
-    Block(Block),
-    Transaction(Transaction),
+    Block(IndexedBlock),
+    Transaction(IndexedTransaction),
     Input(fuel_tx::Input),
     Output(fuel_tx::Output),
     StorageSlot(fuel_tx::StorageSlot),
