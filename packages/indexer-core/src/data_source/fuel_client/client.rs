@@ -12,7 +12,6 @@ use fuel_core_client::client::{
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
-// TODO: Instantiate fuel client here as part of new()
 pub struct FuelClientDataSource {
     pub block_page_size: i32,
 }
@@ -36,7 +35,7 @@ impl DataSource<ExecutableBlock> for FuelClientDataSource {
         &mut self,
         tx: UnboundedSender<ExecutableBlock>,
         start: u32,
-    ) -> tokio::task::JoinHandle<()> {
+    ) -> tokio::task::JoinHandle<anyhow::Result<()>> {
         let client = FuelClient::from_str("https://beta-5.fuel.network").unwrap();
         let mut cursor = Some(start.to_string());
         let block_page_size = self.block_page_size;
@@ -49,15 +48,16 @@ impl DataSource<ExecutableBlock> for FuelClientDataSource {
                     direction: PageDirection::Forward,
                 };
 
-                let paginated_result = client.full_blocks(request).await.unwrap();
+                let paginated_result = client.full_blocks(request).await?;
 
                 cursor = paginated_result.cursor;
 
                 for block in paginated_result.results {
-                    let exec_block = ExecutableBlock::from(block);
-                    tx.send(exec_block).unwrap();
+                    let exec_block = ExecutableBlock::try_from(block)?;
+                    tx.send(exec_block)?;
                 }
             }
+            Ok(())
         })
     }
 }

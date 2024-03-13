@@ -47,5 +47,9 @@ pub trait DataSource<T> {
 
     /// Returns a `BoxStream<T>` starting at the desired chain height.
     fn get_stream(&self) -> (UnboundedSender<T>, BoxStream<T>);
-    fn run(&mut self, tx: UnboundedSender<T>, start: u32) -> tokio::task::JoinHandle<()>;
+    fn run(
+        &mut self,
+        tx: UnboundedSender<T>,
+        start: u32,
+    ) -> tokio::task::JoinHandle<anyhow::Result<()>>;
 }

@@ -1,6 +1,7 @@
 mod client;
 mod queries;
 
+use anyhow::Error;
 use fuel_tx::UniqueIdentifier;
 use fuel_vm::fuel_types::{canonical::Deserialize, ChainId};
 
@@ -8,8 +9,10 @@ use self::queries::FullBlock;
 use super::types::{ExecutableBlock, Header, Transaction};
 pub use crate::data_source::fuel_client::client::FuelClientDataSource;
 
-impl From<FullBlock> for ExecutableBlock {
-    fn from(full_block: FullBlock) -> Self {
+impl TryFrom<FullBlock> for ExecutableBlock {
+    type Error = Error;
+
+    fn try_from(full_block: FullBlock) -> Result<Self, anyhow::Error> {
         let id =
             fuel_core_types::blockchain::primitives::BlockId::from(full_block.id.0 .0);
         let header = Header {
@@ -63,11 +66,11 @@ impl From<FullBlock> for ExecutableBlock {
             })
             .collect::<Vec<Transaction>>();
 
-        Self {
+        Ok(Self {
             id,
             header,
             consensus,
             transactions,
-        }
+        })
     }
 }

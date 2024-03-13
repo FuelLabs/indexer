@@ -1,17 +1,18 @@
 pub mod simple;
 
-use tokio::sync::mpsc::UnboundedSender;
-
-use crate::{data_source::types::ExecutableBlock, BoxStream, IndexableType};
+use crate::{data_source::types::ExecutableBlock, storage::Storage, BoxStream};
 
 // TODO: This should be a Fuel VM (or equivalent) with external call functionality
 
 /// A trait providing functionality for executing transactions as part of a block.
-pub trait Executor {
-    fn get_stream(&self) -> (UnboundedSender<IndexableType>, BoxStream<IndexableType>);
+pub trait Executor<S>
+where
+    S: Storage,
+{
+    fn new() -> Self;
     fn run(
         &self,
         executable_block_stream: BoxStream<ExecutableBlock>,
-        indexed_item_tx: UnboundedSender<IndexableType>,
-    ) -> tokio::task::JoinHandle<()>;
+        storage: S,
+    ) -> tokio::task::JoinHandle<anyhow::Result<()>>;
 }

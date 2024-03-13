@@ -1,34 +1,34 @@
 use crate::{
-    data_source::types::ExecutableBlock, Block, IndexableType, IntoBoxStream, Transaction,
+    data_source::types::ExecutableBlock, storage::Storage, Block, IndexableType,
+    Transaction,
 };
 use futures::StreamExt;
-use tokio::sync::mpsc::UnboundedSender;
-use tokio_stream::wrappers::UnboundedReceiverStream;
 
 use crate::BoxStream;
 
 use super::Executor;
 pub struct SimpleExecutor {}
 
-impl Executor for SimpleExecutor {
-    fn get_stream(&self) -> (UnboundedSender<IndexableType>, BoxStream<IndexableType>) {
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<IndexableType>();
-
-        (tx, UnboundedReceiverStream::new(rx).into_boxed())
+impl<S> Executor<S> for SimpleExecutor
+where
+    S: Storage + Send + 'static,
+{
+    fn new() -> Self {
+        Self {}
     }
 
     fn run(
         &self,
         mut executable_block_stream: BoxStream<ExecutableBlock>,
-        indexed_item_tx: UnboundedSender<IndexableType>,
-    ) -> tokio::task::JoinHandle<()> {
+        mut storage: S,
+    ) -> tokio::task::JoinHandle<anyhow::Result<()>> {
         tokio::task::spawn(async move {
             while let Some(block) = executable_block_stream.next().await {
                 for ref transaction in block.transactions {
                     if let Some(receipts) = &transaction.receipts {
                         for r in receipts.clone() {
                             let idx_type = IndexableType::Receipt(r.clone());
-                            indexed_item_tx.send(idx_type).unwrap();
+                            storage.save(idx_type).await?;
                         }
                     }
 
@@ -38,9 +38,7 @@ impl Executor for SimpleExecutor {
                         kind: transaction.kind.clone(),
                     };
 
-                    indexed_item_tx
-                        .send(IndexableType::Transaction(idx_tx))
-                        .unwrap()
+                    storage.save(IndexableType::Transaction(idx_tx)).await?;
                 }
 
                 let b = Block {
@@ -50,15 +48,16 @@ impl Executor for SimpleExecutor {
                     msg_receipt_count: block.header.message_receipt_count,
                     tx_root: block.header.transactions_root,
                     msg_receipt_root: block.header.message_receipt_root,
-                    // prev_id: Bytes32::zeroed().into(),
                     prev_root: block.header.prev_root,
                     timestamp: block.header.time,
                     application_hash: block.header.application_hash,
                     transactions: vec![],
                 };
 
-                indexed_item_tx.send(IndexableType::Block(b)).unwrap();
+                storage.save(IndexableType::Block(b)).await?;
             }
+
+            Ok(())
         })
     }
 }
