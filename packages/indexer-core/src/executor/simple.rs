@@ -13,10 +13,6 @@ impl<S> Executor<S> for SimpleExecutor
 where
     S: Storage + Send + 'static,
 {
-    fn new() -> Self {
-        Self {}
-    }
-
     fn run(
         mut executable_block_stream: BoxStream<ExecutableBlock>,
         mut storage: S,

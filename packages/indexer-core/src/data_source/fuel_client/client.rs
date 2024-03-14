@@ -12,7 +12,9 @@ use fuel_core_client::client::{
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
+/// Fuel client used for fetching blocks from the chain.
 pub struct FuelClientDataSource {
+    /// Maximum number of blocks that should be fetched in each request.
     pub block_page_size: i32,
 }
 

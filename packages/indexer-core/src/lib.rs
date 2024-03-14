@@ -31,6 +31,7 @@ pub trait IntoBoxStream: Stream {
 
 impl<S> IntoBoxStream for S where S: Stream + Send + Sync + 'static {}
 
+/// Represents a transaction as it's intended to be stored.
 #[derive(Debug, Clone)]
 pub struct IndexedTransaction {
     pub id: fuel_tx::TxId,
@@ -38,6 +39,7 @@ pub struct IndexedTransaction {
     pub kind: fuel_tx::Transaction,
 }
 
+/// Represents a block as it's intended to be stored.
 #[derive(Debug, Clone)]
 pub struct IndexedBlock {
     pub id: BlockId,
@@ -46,7 +48,6 @@ pub struct IndexedBlock {
     pub msg_receipt_count: u64,
     pub tx_root: Bytes32,
     pub msg_receipt_root: Bytes32,
-    // pub prev_id: BlockId,
     pub prev_root: Bytes32,
     pub timestamp: Tai64,
     pub application_hash: Bytes32,

@@ -12,13 +12,16 @@ pub trait Executor<S>
 where
     S: Storage,
 {
-    fn new() -> Self;
+    // TODO: This can probably be adjusted to take a Sway script that an executor will run.
+    /// Spawns a task that monitors an `ExecutableBlock` stream and executes functionality
+    /// for each instance that is sent through the stream.
     fn run(
         executable_block_stream: BoxStream<ExecutableBlock>,
         storage: S,
     ) -> tokio::task::JoinHandle<anyhow::Result<()>>;
 }
 
+/// Converts an `&ExecutableTransaction` into an `IndexedTransaction`.
 impl From<&ExecutableTransaction> for IndexedTransaction {
     fn from(transaction: &ExecutableTransaction) -> Self {
         IndexedTransaction {
@@ -29,6 +32,7 @@ impl From<&ExecutableTransaction> for IndexedTransaction {
     }
 }
 
+/// Converts an `ExecutableBlock` into an `IndexedBlock`.
 impl From<ExecutableBlock> for IndexedBlock {
     fn from(block: ExecutableBlock) -> Self {
         Self {

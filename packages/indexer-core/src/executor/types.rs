@@ -2,6 +2,7 @@ use fuel_core_types::blockchain::{consensus::Consensus, primitives::BlockId};
 use fuel_tx::{Bytes32, Receipt};
 use tai64::Tai64;
 
+/// Contains general metadata about an executable block.
 #[derive(Debug)]
 pub struct Header {
     pub id: BlockId,
@@ -16,6 +17,7 @@ pub struct Header {
     pub application_hash: Bytes32,
 }
 
+/// Contains the necessary information for an executor to process a transaction.
 #[derive(Debug)]
 pub struct ExecutableTransaction {
     pub id: fuel_tx::TxId,
