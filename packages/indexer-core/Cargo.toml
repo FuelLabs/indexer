@@ -1,5 +1,5 @@
 [package]
-name = "fuels-indexer"
+name = "indexer-core"
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }
@@ -7,19 +7,19 @@ homepage = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
 rust-version = { workspace = true }
-description = "Fuels Indexer"
+description = "Fuel Indexer Core"
 
 [dependencies]
 anyhow = { version = "1.0", default-features = false }
-async-std = "1"
-bincode = { workspace = true }
-clap = { features = ["cargo", "derive", "env"], workspace = true }
+async-trait = "0.1"
+cynic = "2.2"
+fuel-core-client = "0.22.1"
+fuel-core-types = "0.22.1"
 fuel-crypto = { workspace = true }
 fuel-tx = { workspace = true }
 fuel-vm = { workspace = true }
+futures = "0.3"
+tai64 = "4.0"
 thiserror = { workspace = true }
-tokio = { features = ["macros", "rt-multi-thread", "sync", "process"], workspace = true }
-
-[dev-dependencies]
-
-[features]
+tokio = { version = "1.36", features = ["macros", "rt-multi-thread", "sync", "process"] }
+tokio-stream = "0.1"
